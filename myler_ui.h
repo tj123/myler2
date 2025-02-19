@@ -31,6 +31,8 @@ typedef struct {
     bool status;
 } ui_frame_t;
 
+#define MYLER_UI_MAX_WIDTH
+
 typedef struct myler_ui_t {
     int width, height;
     int old_width, old_height;

@@ -186,7 +186,8 @@ static void show_search(myler_ui_t *ui)
 static void show_message(myler_ui_t *ui)
 {
     static int timer = 0;
-    char buf[ui->max_width];
+//    char buf[ui->max_width];
+    char buf[UI_MAX_WIDTH];
 
     if (ui->message_status) {
         if (ui->list_frame.disable && ui->main_window_frame.disable && ui->timer_frame.disable)

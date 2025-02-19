@@ -1,9 +1,12 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include <io.h>
+//#include <sys/io.h>
 
-#include <direct.h>
+//#include <direct.h>
+
+#include <sys/stat.h>
+
 #include <stdlib.h>
 
 #include "myler_utils.h"

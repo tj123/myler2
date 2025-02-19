@@ -1,13 +1,7 @@
 #include "httpclient.h"
 
-#include <winsock2.h>
-#include <Ws2tcpip.h>
-
-//int inet_pton(int family, const char *strptr, void *addrptr);
-//const char *inet_ntop(int family, const void *addrptr, char *strptr, size_t len);
-
-WSADATA wsaData;
-typedef SOCKET socket_t;
+#include <sys/socket.h>
+typedef int socket_t;
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,6 +9,14 @@ typedef SOCKET socket_t;
 #include <sys/stat.h>
 #include <assert.h>
 #include <ctype.h>
+
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <errno.h>
+
+#include <netdb.h>
+#include <unistd.h>
 
 #define HTTP_POST "POST /%s HTTP/1.1\r\nHOST: %s:%d\r\nAccept: */*\r\n" \
                   "Content-Type:application/x-www-form-urlencoded\r\nContent-Length: %d\r\n\r\n%s"
@@ -29,18 +31,15 @@ static int set_error(const char *errstr)
 {
     int err_code, len;
 
-    err_code = WSAGetLastError();
+    err_code = errno;
     sprintf(str_err_buf, "%s: ", errstr);
     len = strlen(str_err_buf);
-    FormatMessage(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
-                    NULL, err_code, 0, str_err_buf + len, (sizeof str_err_buf) - len, NULL);
+    strcpy(str_err_buf + len, strerror(errno));
     return err_code;
 }
 
 int http_client_init(void)
 {
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData)) 
-        return set_error("WindowsWSAStartupError");
     return 0;
 }
 
@@ -103,7 +102,6 @@ static char *get_url(char *host_name)
     return host_name;
 }
 
-
 int http_client_get(http_client_t *client, const char *url, HttpProessFunc func, void *arg)
 {
     char buf[4096];
@@ -121,7 +119,7 @@ int http_client_get(http_client_t *client, const char *url, HttpProessFunc func,
     /* 解析URL */
     get_url(strcpy(url_buf, url));
     get_host(strcpy(host_name_buf, url));
-    if ((_host = gethostbyname(host_name_buf)) == NULL) 
+    if ((_host = gethostbyname(host_name_buf)) == NULL)
         return client->error_code = set_error("GetHostByNameError");
     inet_ntop(AF_INET, _host->h_addr, ip_buf, sizeof ip_buf);
 
@@ -129,7 +127,8 @@ int http_client_get(http_client_t *client, const char *url, HttpProessFunc func,
     if ((_socket = socket_create_client(ip_buf, 80)) < 0) 
         return client->error_code = -_socket;
 
-    #define client_end(code)  (closesocket(_socket), client->error_code = (code))
+//    #define client_end(code)  (closesocket(_socket), client->error_code = (code))
+    #define client_end(code)  (close(_socket), client->error_code = (code))
 
     sprintf(buf, HTTP_GET, url_buf, host_name_buf);
     if (send(_socket, buf, strlen(buf), 0) < 0) 
@@ -166,7 +165,8 @@ int http_client_get(http_client_t *client, const char *url, HttpProessFunc func,
         }
     } else {
         free(client->header);
-        closesocket(_socket);
+//        closesocket(_socket);
+        close(_socket);
         return client_end(set_error("SocketSendError"));
     }
 

@@ -3,14 +3,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <Windows.h>
 
-#ifdef _MSC_VER
-#pragma comment(lib, "winmm.lib")
-#endif 
-
-static int  _music_id;
-static char _music_cmd[256];
+// static int  _music_id;
+// static char _music_cmd[256];
 static char _music_err[256];
 static char _music_retbuf[256];
 static char _music_argbuf[256];
@@ -20,44 +15,31 @@ struct _music_t {
     char device[20];
 };
 
-static char *get_file_name(char *path)
-{
-    int i = strlen(path);
+// static char *get_file_name(char *path)
+// {
+//     int i = strlen(path);
 
-    while (--i >= 0 && path[i] != '\\' && path[i] != '/');
-    if (i > 0)
-        strcpy(path, path + i + 1);
-    return path;
-}
+//     while (--i >= 0 && path[i] != '\\' && path[i] != '/');
+//     if (i > 0)
+//         strcpy(path, path + i + 1);
+//     return path;
+// }
 
 /* 对mciSendString的一个简易封装
  * - 私有函数
  */
-static int send_music_cmd_string(const char *cmd, const char *device, const char *arg)
-{
-    MCIERROR error;
+// static int send_music_cmd_string(const char *cmd, const char *device, const char *arg)
+// {
 
-    sprintf(_music_cmd, "%s %s %s", cmd, device, arg);
-    if ((error = mciSendString(_music_cmd, _music_retbuf, sizeof _music_retbuf, NULL))) {
-        mciGetErrorString(error, _music_err, sizeof _music_err);
-        return MUSIC_ERROR;
-    }
-    strcpy(_music_err, "OK");
-    return MUSIC_OK;
-}
+//     return MUSIC_OK;
+// }
 
 /* 控制mciSendString
  * - 私有函数
  */
 static int music_control(music_t *music, const char *cmd, const char *arg)
 {
-    if (music == NULL) {
-        strcpy(_music_err, "NULL Music object");
-        return MUSIC_ERROR;
-    }
-    
-    if (send_music_cmd_string(cmd, music->device, arg))
-        return MUSIC_ERROR;
+
     return MUSIC_OK;
 }
 
@@ -70,14 +52,7 @@ music_t *music_create(const char *file_name)
     music_t *music = (music_t *)malloc(sizeof(struct _music_t));
 
     if (music) {   
-        strcpy(music->file_name, file_name);
-        get_file_name(music->file_name);
-        sprintf(music->device, "_M_-%d-_17_", _music_id++);
-        sprintf(_music_argbuf, "\"%s\" alias %s", file_name, music->device);
-        if (send_music_cmd_string("open", "", _music_argbuf)) {
-            free(music);
-            music = NULL;
-        }
+
     }
     return music;
 }
